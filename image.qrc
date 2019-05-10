@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>image/ColorTranslate.ico</file>
+        <file>image/help.ico</file>
+        <file>image/exit.ico</file>
+        <file>image/about.ico</file>
+    </qresource>
+</RCC>

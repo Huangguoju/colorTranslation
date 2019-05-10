@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
+#include "QVector"
 
 namespace Ui {
 class MainWindow;
@@ -93,29 +94,49 @@ public:
     RS_S32 translate(int colorType, RS_S32 uiColorVal);
     int ReadColorSetting(const QSettings &config, const QString &key, RS_U8 *pColorSettting);
     void ConfigCameraColor(int chiptype);
+
 private slots:
     void init();
-
     void on_commandLinkButton_clicked();
-
     void doRefreshCameraDefaultMapVal();
 
-    void on_openFile_clicked();
-
+    void on_openFile_clicked(bool hideDialog = 0);
     void on_cameraFormatBox_currentIndexChanged(int index);
-
     void on_ADchipTypeBox_currentIndexChanged(int index);
+
+    void createActions();
+    void createMenus();
+    void createStatusBar();
+    void famousRemark();
+    void updateFamous();
+
+    void open();
+    void about();
+    void update();
+
+    void on_directoryComboBox_currentIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;
     QList<QLineEdit *> QLine_UIcolor_list;
     QList<QLineEdit *> QLine_TRcolor_list;
+    QVector<QString> famousRemarkVector;
 
 
     RS_U8 CameraColorVal[VIDEO_MAX][5];
     RS_U8 UIColorDefaultVal[5];
     RS_U8 ColorMode;
     QString filename;
+
+    QMenu *fileMenu;
+    QMenu *helpMenu;
+
+    QAction *openAct;
+    QAction *exitAct;
+
+    QAction *helpAct;
+    QAction *updateAct;
+    QAction *aboutUsAct;
 };
 
 #endif // MAINWINDOW_H

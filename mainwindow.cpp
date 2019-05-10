@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include "aboutusdialog.h"
+#include "QTimer"
+#include "time.h"
 
 
 
@@ -10,13 +12,16 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     init();
+
+    createActions();
+    createMenus();
+    createStatusBar();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
 
 void MainWindow::init()
 {
@@ -66,6 +71,109 @@ void MainWindow::init()
 
 }
 
+void MainWindow::createMenus()
+{
+    fileMenu = menuBar()->addMenu("文件");
+    fileMenu->addAction(openAct);
+    fileMenu->addSeparator(); //分隔符
+    fileMenu->addAction(exitAct);
+
+    menuBar()->addSeparator();
+
+    helpMenu = menuBar()->addMenu("帮助");
+    helpMenu->addAction(helpAct);
+    helpMenu->addAction(updateAct);
+    helpMenu->addSeparator();
+    helpMenu->addAction(aboutUsAct);
+}
+
+void MainWindow::createActions()
+{
+
+    openAct = new QAction(tr("&Open..."), this);
+    openAct->setShortcuts(QKeySequence::Open);
+    openAct->setStatusTip(tr("Open an existing file")); //底部提示
+    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+
+    exitAct = new QAction(QIcon(":image/exit.ico"), "退出", this);
+    exitAct->setShortcuts(QKeySequence::Quit);
+    exitAct->setStatusTip("Exit the application");
+    connect(exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
+
+    helpAct = new QAction(QIcon(":image/help.ico"), "帮助", this);
+    helpAct->setShortcuts(QKeySequence::HelpContents); //添加快捷键
+    connect(helpAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+
+    updateAct = new QAction("检查更新...", this);
+    connect(updateAct, SIGNAL(triggered()), this, SLOT(update()));
+
+    aboutUsAct = new QAction(QIcon(":image/about.ico"), "关于", this);
+    aboutUsAct->setShortcuts(QKeySequence::WhatsThis); //添加快捷键
+    connect(aboutUsAct, SIGNAL(triggered()), this, SLOT(about()));
+}
+
+void MainWindow::open()
+{
+    on_openFile_clicked();
+}
+
+void MainWindow::about()
+{
+    AboutUsDialog *aboutUsdia = new AboutUsDialog(this);
+    aboutUsdia->exec();
+}
+
+void MainWindow::update()
+{
+
+   QMessageBox::about(this, tr("Update"),
+            tr("there has a new version, click ok to update."));
+}
+
+
+void MainWindow::createStatusBar()
+{
+    statusBar()->showMessage("已就绪");
+
+    famousRemark();
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateFamous()));
+    timer->start(30000);
+
+}
+
+void MainWindow::updateFamous()
+{
+    statusBar()->showMessage(famousRemarkVector.at(rand() % famousRemarkVector.size()));
+}
+
+void MainWindow::famousRemark()
+{
+    srand(time(NULL));
+    famousRemarkVector  << "泰戈尔曾经说过:要是童年的日子能重新回来，那我一定不再浪费光阴，我要把每分每秒都用来读书。"
+        << "三年二班的周杰伦,请马上到教导处来"
+        << "真理惟一可靠的标准就是永远自相符合。"
+        << "时间是一切财富中最宝贵的财富。"
+        << "世界上一成不变的东西，只有“任何事物都是在不断变化的”这条真理。"
+        << "生活有度，人生添寿。 —— 书摘"
+        << "任何事物都无法抗拒吞食一切的时间。"
+        << "青春是没有经验和任性的。"
+        << "思想以自己的言语喂养它自己，而成长起来。"
+        << "泰戈尔曾经说过：沉默是一种美德，但在喜欢的人面前沉默那便是懦弱，我已经懦弱了三年，"
+        "今天我要勇敢。黄晶晶同学，你愿意和我携手告别高中时代吗！ - 青春派"
+        << "过放荡不羁的生活，容易得像顺水推舟，但是要结识良朋益友，却难如登天。"
+        << "这世界要是没有爱情，它在我们心中还会有什么意义！这就如一盏没有亮光的走马灯。"
+        << "人生并不像火车要通过每个站似的经过每一个生活阶段。人生总是直向前行走，从不留下什么。"
+        << "有所作为是生活的最高境界。 —— 恩格斯"
+        << "我们活着不能与草木同腐，不能醉生梦死，枉度人生，要有所做为。"
+        << "浪费别人的时间等于是谋财害命，浪费自己的时间等于是慢性自杀。 —— 列宁"
+        << "现实是此岸，理想是彼岸，中间隔着湍急的河流，行动则是架在河上的桥梁。 —— 克雷洛夫"
+        << "读书谓已多，抚事知不足。 —— 王安石"
+        << "青年长于创造而短于思考，长于猛干而短于讨论，长于革新而短于持重。 —— 培根"
+        << "理想对我来说，具有一种非凡的魅力。我的理想总是充满着生活和泥土气息。我从来都不去空想那些不可能实现的事情。 —— 奥斯特洛夫斯基"
+        << "青春啊，难道你始终囚禁在狭小圈子里？你得撕破老年的蛊惑人心的网。";
+}
+
 int MainWindow::ReadColorSetting(const QSettings &config, const QString &key,
                      RS_U8 *pColorSettting)
 {
@@ -97,7 +205,6 @@ int MainWindow::ReadColorSetting(const QSettings &config, const QString &key,
 
 void MainWindow::ConfigCameraColor(int chiptype)
 {
-    //QSettings config("custom-config.ini", QSettings::IniFormat);
     QSettings config(filename, QSettings::IniFormat);
     QString maindirect;
     for(int i = 0; i < VIDEO_MAX; i++){
@@ -165,28 +272,32 @@ void MainWindow::ConfigCameraColor(int chiptype)
     ReadColorSetting(config, "DisplaySenceDef/UIColorDefaultVal", UIColorDefaultVal);
 }
 
-void MainWindow::on_openFile_clicked()
+void MainWindow::on_openFile_clicked(bool hideDialog)
 {
+    if(hideDialog != 1){
+        filename = QFileDialog::getOpenFileName(this,tr("open custom-config.ini"),
+                                                QDir::currentPath(), tr("configuration files (*.ini)"));
 
-    filename = QFileDialog::getOpenFileName(this,tr("open custom-config.ini"),
-                                            QDir::currentPath(), tr("configuration files (*.ini)"));
-
-    if (!filename.isEmpty()) {
-        if (ui->directoryComboBox->findText(filename) == -1)
-            ui->directoryComboBox->addItem(filename);
-        ui->directoryComboBox->setCurrentIndex(ui->directoryComboBox->findText(filename));
+        if (!filename.isEmpty()) {
+            if (ui->directoryComboBox->findText(filename) == -1)
+                ui->directoryComboBox->addItem(filename);
+            ui->directoryComboBox->setCurrentIndex(ui->directoryComboBox->findText(filename));
+        }
+    }else{
+        filename = ui->directoryComboBox->currentText();
     }
 
     QFile file(filename);
     if(!file.open(QFile::ReadOnly | QFile::Text))
         return;
 
+
+    QSettings config(filename, QSettings::IniFormat);
 //    QTextStream in(&file);
 //    while (!in.atEnd()) {
 //        QString line = in.readLine();
 //        qDebug() << line ;
 //    }
-    QSettings config(filename, QSettings::IniFormat);
 //    RS_U8 UIColorDefaultVal[5];
 //    ReadColorSetting(config, "DisplaySenceDef/UIColorDefaultVal", UIColorDefaultVal);
 //    qDebug() << UIColorDefaultVal[0] << UIColorDefaultVal[1];
@@ -286,10 +397,18 @@ RS_S32 MainWindow::translate(int colorType,RS_S32 uiColorVal)
 
 void MainWindow::on_cameraFormatBox_currentIndexChanged(int index)
 {
+    index = 0;
     doRefreshCameraDefaultMapVal();
 }
 
 void MainWindow::on_ADchipTypeBox_currentIndexChanged(int index)
 {
+    index = 0;
     doRefreshCameraDefaultMapVal();
+}
+
+void MainWindow::on_directoryComboBox_currentIndexChanged(int index)
+{
+    index = 0;
+    on_openFile_clicked(true);
 }

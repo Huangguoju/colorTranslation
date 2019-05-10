@@ -7,17 +7,25 @@
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+# 网络请求
+QT += network
 
 TARGET = UIcolorTranslation
 TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    aboutusdialog.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    aboutusdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    aboutusdialog.ui
 
 OTHER_FILES += \
     ColorTranslate.ico
+
+RESOURCES += \
+    image.qrc
