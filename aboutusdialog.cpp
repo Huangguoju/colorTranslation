@@ -3,6 +3,7 @@
 #include "QPainter"
 #include "mainwindow.h"
 #include "QTimer"
+#include "QDesktopServices"
 
 AboutUsDialog::AboutUsDialog(QWidget *parent) :
     QDialog(parent),
@@ -34,3 +35,9 @@ void AboutUsDialog::paintEvent(QPaintEvent *event)
     painter.drawText(width() - m_charWidth*m_curIndex, 30, m_showText.left(m_curIndex));
 }
 
+
+void AboutUsDialog::on_joinUsURl_linkActivated(const QString &link)
+{
+    QDesktopServices::openUrl(QUrl(link));
+
+}
