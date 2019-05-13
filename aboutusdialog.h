@@ -2,6 +2,7 @@
 #define ABOUTUSDIALOG_H
 
 #include <QDialog>
+#include "mainwindow.h"
 
 namespace Ui {
 class AboutUsDialog;
@@ -14,7 +15,7 @@ class AboutUsDialog : public QDialog
 public:
     explicit AboutUsDialog(QWidget *parent = 0);
     ~AboutUsDialog();
-    void paintEvent(QPaintEvent *event);
+    void paintEvent(QPaintEvent *);
 
 private:
     Ui::AboutUsDialog *ui;

@@ -3,6 +3,7 @@
 #include "aboutusdialog.h"
 #include "QTimer"
 #include "time.h"
+#include "updatedialog.h"
 
 
 
@@ -126,8 +127,12 @@ void MainWindow::about()
 void MainWindow::update()
 {
 
-   QMessageBox::about(this, tr("Update"),
-            tr("there has a new version, click ok to update."));
+//   QMessageBox::about(this, tr("Update"),
+//            tr("there has a new version, click ok to update."));
+    UpdateDialog *updateDia = new UpdateDialog(this);
+    updateDia->exec();
+
+
 }
 
 

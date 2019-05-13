@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>UI枪机颜色转换</string>
+   <string>枪机颜色转换</string>
   </property>
   <property name="windowIcon">
    <iconset resource="image.qrc">

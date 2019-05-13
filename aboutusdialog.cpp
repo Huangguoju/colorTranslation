@@ -1,7 +1,6 @@
 #include "aboutusdialog.h"
 #include "ui_aboutusdialog.h"
 #include "QPainter"
-#include "mainwindow.h"
 #include "QTimer"
 
 AboutUsDialog::AboutUsDialog(QWidget *parent) :
@@ -24,7 +23,7 @@ AboutUsDialog::~AboutUsDialog()
     delete ui;
 }
 
-void AboutUsDialog::paintEvent(QPaintEvent *event)
+void AboutUsDialog::paintEvent(QPaintEvent *)
 {
     m_curIndex++;
     if (m_curIndex*m_charWidth > width())

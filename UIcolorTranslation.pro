@@ -16,13 +16,16 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    aboutusdialog.cpp
+    aboutusdialog.cpp \
+    updatedialog.cpp
 
 HEADERS  += mainwindow.h \
-    aboutusdialog.h
+    aboutusdialog.h \
+    updatedialog.h
 
 FORMS    += mainwindow.ui \
-    aboutusdialog.ui
+    aboutusdialog.ui \
+    updatedialog.ui
 
 OTHER_FILES += \
     ColorTranslate.ico

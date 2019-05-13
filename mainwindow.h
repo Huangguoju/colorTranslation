@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include "QVector"
+#include <QNetworkAccessManager>
 
 namespace Ui {
 class MainWindow;
