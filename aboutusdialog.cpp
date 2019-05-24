@@ -2,6 +2,8 @@
 #include "ui_aboutusdialog.h"
 #include "QPainter"
 #include "QTimer"
+#include "QDesktopServices"
+#include "QUrl"
 
 AboutUsDialog::AboutUsDialog(QWidget *parent) :
     QDialog(parent),
@@ -33,3 +35,11 @@ void AboutUsDialog::paintEvent(QPaintEvent *)
     painter.drawText(width() - m_charWidth*m_curIndex, 30, m_showText.left(m_curIndex));
 }
 
+
+void AboutUsDialog::on_joinUsURl_linkActivated(const QString &link)
+{
+    QDesktopServices::openUrl(QUrl(link));
+
+//    ui->joinUsURl->setText(tr("<a href =" "www.baidu.com" ">google</a>"));
+//    ui->joinUsURl->setOpenExternalLinks(true);
+}

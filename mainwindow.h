@@ -11,6 +11,8 @@
 #include <QSettings>
 #include "QVector"
 #include <QNetworkAccessManager>
+#include "QTimer"
+#include "time.h"
 
 namespace Ui {
 class MainWindow;

@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "aboutusdialog.h"
-#include "QTimer"
-#include "time.h"
 #include "updatedialog.h"
 
 

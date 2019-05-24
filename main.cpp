@@ -3,7 +3,8 @@
 #include <QTextCodec>
 #include <stdlib.h>
 
-//qDebug() << "111" ;
+//    qDebug() << "     " ;
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

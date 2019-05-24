@@ -17,6 +17,9 @@ public:
     ~AboutUsDialog();
     void paintEvent(QPaintEvent *);
 
+private slots:
+    void on_joinUsURl_linkActivated(const QString &link);
+
 private:
     Ui::AboutUsDialog *ui;
     int m_charWidth;
