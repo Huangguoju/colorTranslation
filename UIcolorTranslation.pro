@@ -10,6 +10,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 # 网络请求
 QT += network
 
+# 软件exe图标
+RC_FILE = softwarePicture.rc
+
 TARGET = UIcolorTranslation
 TEMPLATE = app
 
