@@ -12,7 +12,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 	m_pSelf = this;
 	
-	setFixedSize(904, 541);
+    setFixedSize(904, 541);
+
+    movie = NULL;
 	
     init();
 	ui->movieLabel->clear();
