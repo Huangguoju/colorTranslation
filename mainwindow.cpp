@@ -3,14 +3,35 @@
 #include "aboutusdialog.h"
 #include "updatedialog.h"
 
-
+MainWindow *MainWindow::m_pSelf = NULL;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+	m_pSelf = this;
+	
+	setFixedSize(904, 541);
+	
     init();
+	ui->movieLabel->clear();
+	
+    //当前软件版本
+    oldversion = 1.1;
+	
+	//移除升级后的辅助升级bat脚本
+    QFile::remove(QCoreApplication::applicationDirPath() + "/upgrad.bat");
+    QFile::remove(QCoreApplication::applicationDirPath() + "/updateAssistant.bat");
+
+    //首次启动检测是否有新版本
+    m_detect = new FtpManager;
+    m_detect->get("/colorTranslation/upgradInfo.txt", QCoreApplication::applicationDirPath() + "/upgradInfo.txt");
+    connect(m_detect, SIGNAL(sigfinish(bool)), this, SLOT(finish(bool)));
+
+    m_famousRemark = new FtpManager;
+    m_famousRemark->get("/colorTranslation/famousRemarkOnline.txt", QCoreApplication::applicationDirPath() + "/famousRemarkOnline.txt");
+    connect(m_famousRemark, SIGNAL(sigfinish(bool)), this, SLOT(famousRemarkfinish(bool)));
 
     createActions();
     createMenus();
@@ -19,7 +40,122 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    if (movie){
+        movie->stop();
+        disconnect(movie, SIGNAL(frameChanged(int)), this, SLOT(movieStatus(int)));
+        movie->~QMovie();//要销毁qmovie才能删除图片
+        ui->movieLabel->clear();
+        ui->movieLabel->hide();
+        QFile::remove(QCoreApplication::applicationDirPath() + "/startDemo.gif");
+    }
+
+    QFile::remove(QCoreApplication::applicationDirPath() + "/upgrad.bat");
+    QFile::remove(QCoreApplication::applicationDirPath() + "/updateAssistant.bat");
+    QFile::remove(QCoreApplication::applicationDirPath() + "/upgradInfo.txt");
+    QFile::remove(QCoreApplication::applicationDirPath() + "/famousRemarkOnline.txt");
+
     delete ui;
+}
+
+void MainWindow::movieStatus(int frameNumber)
+{
+    if (frameNumber == frameCount - 1){
+        movie->stop();
+        disconnect(movie, SIGNAL(frameChanged(int)), this, SLOT(movieStatus(int)));
+        movie->~QMovie();//要销毁qmovie才能删除图片
+        movie = NULL;
+        ui->movieLabel->clear();
+        ui->movieLabel->hide();
+        QFile::remove(QCoreApplication::applicationDirPath() + "/startDemo.gif");
+    }
+}
+
+
+void MainWindow::startDemofinish(bool result)
+{
+    if(!result){
+        QFile::remove(QCoreApplication::applicationDirPath() + "/startDemo.gif");
+        return;
+    }
+
+    movie = new QMovie(QCoreApplication::applicationDirPath() + "/startDemo.gif");
+    ui->movieLabel->setScaledContents(true);//拉伸
+    ui->movieLabel->setGeometry(0, 0, 892, 491);//图片位置
+    ui->movieLabel->setMovie(movie);
+    frameCount = movie->frameCount();
+    movie->start();
+    connect(movie, SIGNAL(frameChanged(int)), this, SLOT(movieStatus(int)));
+}
+
+void MainWindow::finish(bool result)
+{
+    /*
+    forceUpgrad:0 //自动检测 0:检测到新版本不提示升级  1:检测到新版本并提示升级 2：检测到新版本不提示直接强制升级 3：忽略升级请求
+    version:1.1
+    showStartDemo:true
+    connectUsUrl:http://www.baidu.com
+    ftpExeName:33
+    downloadExeName:车间配置项掩码计算工具
+    info:
+    增加一些功能，改善一些BUG。
+    车间配置项掩码计算工具
+    //无限升级：upgradInfo.txt里面的版本大于更新后的版本，且forceUpgrad=2，无限循环升级。
+     */
+
+    if(!result){
+        QFile::remove(QCoreApplication::applicationDirPath() + "/upgradInfo.txt");
+        QFile::remove(QCoreApplication::applicationDirPath() + "/famousRemarkOnline.txt");
+        return;
+    }
+
+    QFile f(QCoreApplication::applicationDirPath() + "/upgradInfo.txt");
+    if(!f.open(QIODevice::ReadOnly | QIODevice::Text | QIODevice::Truncate))
+    {
+        qDebug() << "Open failed.";
+        QFile::remove(QCoreApplication::applicationDirPath() + "/upgradInfo.txt");
+        return;
+    }
+
+    QTextStream txtInput(&f);
+    txtInput.setCodec("utf-8");
+    QString lineStr;
+    float newVersion = 0.0;
+    int forceUpgradFlag = 0;
+    m_connectUsUrl = "";
+    while(!txtInput.atEnd())
+    {
+        lineStr = txtInput.readLine();
+        if(lineStr.startsWith("forceUpgrad", Qt::CaseInsensitive)){
+            forceUpgradFlag = lineStr.mid(strlen("forceUpgrad:")).toInt();;
+        }
+
+        if(lineStr.startsWith("version", Qt::CaseSensitive)){
+            newVersion = lineStr.mid(strlen("version:")).toFloat();
+        }
+
+        if(lineStr.startsWith("connectUsUrl", Qt::CaseSensitive)){
+            m_connectUsUrl = lineStr.mid(strlen("connectUsUrl:"));
+        }
+
+        if(lineStr.startsWith("showStartDemo", Qt::CaseSensitive)){
+            if (lineStr.mid(strlen("showStartDemo:")).toInt())
+            {
+                m_startDemo = new FtpManager;
+                m_startDemo->get("/colorTranslation/startDemo.gif", QCoreApplication::applicationDirPath() + "/startDemo.gif");
+                connect(m_startDemo, SIGNAL(sigfinish(bool)), this, SLOT(startDemofinish(bool)));
+            }
+        }
+    }
+    f.close();
+    //删除文件
+    QFile::remove(QCoreApplication::applicationDirPath() + "/upgradInfo.txt");
+
+    //自动检测 0:检测到新版本不提示升级  1:检测到新版本并提示升级 2：检测到新版本不提示直接强制升级 3：忽略升级请求
+    if(newVersion > oldversion && forceUpgradFlag != 3)
+    {
+        if(forceUpgradFlag == 1 || forceUpgradFlag == 2)
+            update();
+    }
 }
 
 void MainWindow::init()
@@ -65,6 +201,12 @@ void MainWindow::init()
     QLine_TRcolor_list << ui->TRcolor_line1 << ui->TRcolor_line2 << ui->TRcolor_line3
                             << ui->TRcolor_line4 << ui->TRcolor_line5;
 
+    for(int i = 0; i < 5; i++)
+    {
+        QLine_UIcolor_list[i]->clear();
+        QLine_TRcolor_list[i]->clear();
+    }
+
     ui->UIDefaultDisplayVal->clear();
     ui->CameraDefaultMapVal->clear();
 
@@ -80,7 +222,7 @@ void MainWindow::createMenus()
     menuBar()->addSeparator();
 
     helpMenu = menuBar()->addMenu("帮助");
-    helpMenu->addAction(helpAct);
+//    helpMenu->addAction(helpAct);
     helpMenu->addAction(updateAct);
     helpMenu->addSeparator();
     helpMenu->addAction(aboutUsAct);
@@ -99,9 +241,9 @@ void MainWindow::createActions()
     exitAct->setStatusTip("Exit the application");
     connect(exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
 
-    helpAct = new QAction(QIcon(":image/help.ico"), "帮助", this);
-    helpAct->setShortcuts(QKeySequence::HelpContents); //添加快捷键
-    connect(helpAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+//    helpAct = new QAction(QIcon(":image/help.ico"), "帮助", this);
+//    helpAct->setShortcuts(QKeySequence::HelpContents); //添加快捷键
+//    connect(helpAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     updateAct = new QAction("检查更新...", this);
     connect(updateAct, SIGNAL(triggered()), this, SLOT(update()));
@@ -124,13 +266,10 @@ void MainWindow::about()
 
 void MainWindow::update()
 {
-
-//   QMessageBox::about(this, tr("Update"),
-//            tr("there has a new version, click ok to update."));
     UpdateDialog *updateDia = new UpdateDialog(this);
+    //无标题
+    //updateDia->setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint);
     updateDia->exec();
-
-
 }
 
 
@@ -139,15 +278,51 @@ void MainWindow::createStatusBar()
     statusBar()->showMessage("已就绪");
 
     famousRemark();
-    QTimer *timer = new QTimer(this);
+    timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateFamous()));
-    timer->start(30000);
-
+    timer->start(10000);
 }
 
 void MainWindow::updateFamous()
 {
     statusBar()->showMessage(famousRemarkVector.at(rand() % famousRemarkVector.size()));
+}
+
+
+void MainWindow::famousRemarkfinish(bool result)
+{
+    if(!result){
+        QFile::remove(QCoreApplication::applicationDirPath() + "/famousRemarkOnline.txt");
+        return;
+    }
+
+    QFile f(QCoreApplication::applicationDirPath() + "/famousRemarkOnline.txt");
+    if(!f.open(QIODevice::ReadOnly | QIODevice::Text | QIODevice::Truncate))
+    {
+        qDebug() << "Open failed.";
+        QFile::remove(QCoreApplication::applicationDirPath() + "/famousRemarkOnline.txt");
+        return;
+    }
+
+    QTextStream txtInput(&f);
+    txtInput.setCodec("utf-8");
+    QString lineStr;
+    famousRemarkVector.clear();
+    timer->stop();
+    while(!txtInput.atEnd())
+    {
+        lineStr = txtInput.readLine();
+        if(lineStr.startsWith("interval", Qt::CaseSensitive)){
+            //1秒：1000
+            timer->setInterval(lineStr.mid(strlen("interval:")).toInt());
+        }else{
+            famousRemarkVector << lineStr;
+        }
+    }
+    f.close();
+    //删除文件
+    QFile::remove(QCoreApplication::applicationDirPath() + "/famousRemarkOnline.txt");
+    timer->start();
 }
 
 void MainWindow::famousRemark()
@@ -400,18 +575,21 @@ RS_S32 MainWindow::translate(int colorType,RS_S32 uiColorVal)
 
 void MainWindow::on_cameraFormatBox_currentIndexChanged(int index)
 {
+    UNUSED(index);
     index = 0;
     doRefreshCameraDefaultMapVal();
 }
 
 void MainWindow::on_ADchipTypeBox_currentIndexChanged(int index)
 {
+    UNUSED(index);
     index = 0;
     doRefreshCameraDefaultMapVal();
 }
 
 void MainWindow::on_directoryComboBox_currentIndexChanged(int index)
 {
+    UNUSED(index);
     index = 0;
     on_openFile_clicked(true);
 }

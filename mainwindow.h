@@ -10,14 +10,22 @@
 #include <QMessageBox>
 #include <QSettings>
 #include "QVector"
-#include <QNetworkAccessManager>
 
 #include "QTimer"
 #include "time.h"
+#include <QNetworkAccessManager>
+#include "ftpmanager.h"
+#include <QMovie>
+
+#include <QNetworkRequest>
+#include "QNetworkReply"
+#include "qprocess.h"
+#include <QThread>
 
 namespace Ui {
 class MainWindow;
 }
+#define UNUSED(x) (void)x;
 
 typedef unsigned char           RS_U8;
 typedef unsigned short          RS_U16;
@@ -92,6 +100,7 @@ class MainWindow : public QMainWindow
     
 public:
     explicit MainWindow(QWidget *parent = 0);
+    static MainWindow *instance() {return m_pSelf;}
     ~MainWindow();
 
 
@@ -117,9 +126,16 @@ private slots:
     void open();
     void about();
     void update();
+    void movieStatus(int frameNumber);
+
+    void finish(bool);
+    void famousRemarkfinish(bool);
+    void startDemofinish(bool);
 
     void on_directoryComboBox_currentIndexChanged(int index);
-
+public:
+    float oldversion;
+    QString m_connectUsUrl;
 private:
     Ui::MainWindow *ui;
     QList<QLineEdit *> QLine_UIcolor_list;
@@ -138,9 +154,18 @@ private:
     QAction *openAct;
     QAction *exitAct;
 
-    QAction *helpAct;
+//    QAction *helpAct;
     QAction *updateAct;
     QAction *aboutUsAct;
+    
+	FtpManager *m_detect;
+    FtpManager *m_famousRemark;
+    FtpManager *m_startDemo;
+    QTimer *timer;
+    QMovie *movie;
+    int frameCount;
+	
+    static MainWindow *m_pSelf;
 };
 
 #endif // MAINWINDOW_H

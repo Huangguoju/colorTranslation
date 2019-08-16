@@ -20,11 +20,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     aboutusdialog.cpp \
-    updatedialog.cpp
+    updatedialog.cpp	\
+    ftpmanager.cpp
 
 HEADERS  += mainwindow.h \
     aboutusdialog.h \
-    updatedialog.h
+    updatedialog.h	\
+    ftpmanager.h
 
 FORMS    += mainwindow.ui \
     aboutusdialog.ui \

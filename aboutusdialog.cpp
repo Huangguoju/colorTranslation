@@ -2,8 +2,8 @@
 #include "ui_aboutusdialog.h"
 #include "QPainter"
 #include "QTimer"
-#include "QDesktopServices"
-#include "QUrl"
+#include <QDesktopServices>
+#include <QUrl>
 
 AboutUsDialog::AboutUsDialog(QWidget *parent) :
     QDialog(parent),
@@ -14,6 +14,9 @@ AboutUsDialog::AboutUsDialog(QWidget *parent) :
     m_curIndex = 0;//当前角码
     m_showText = "海贝TV提供技术支持";//显示的文字
     m_charWidth = fontMetrics().width("海");//每个字符的宽度
+
+    QString aboutVer = QString("版本：%1").arg(MainWindow::instance()->oldversion);
+    ui->label_3->setText(aboutVer);
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -35,11 +38,50 @@ void AboutUsDialog::paintEvent(QPaintEvent *)
     painter.drawText(width() - m_charWidth*m_curIndex, 30, m_showText.left(m_curIndex));
 }
 
+void AboutUsDialog::mousePressEvent(QMouseEvent *event)
+{
+    int curTextLeft = width() - m_charWidth*m_curIndex;
+    int curTextRight = width() - m_charWidth*m_curIndex + m_showText.length()*m_charWidth;
+    if (event->x() >= curTextLeft && event->x() <= curTextRight && event->y() >= 20 && event->y() <= 30){
+        QMovie *movie = new QMovie(":image/easterEgg.gif");
+        ui->label_3->setScaledContents(true);//拉伸
+        ui->label_3->setGeometry(0, 0, 628, 316);//图片位置
+        ui->label_3->setMovie(movie);
+        ui->textBrowser->setVisible(false);
+        movie->start();
+    }
+}
 
 void AboutUsDialog::on_joinUsURl_linkActivated(const QString &link)
 {
-    QDesktopServices::openUrl(QUrl(link));
-
+    //旧电脑打开失败，ShellExecute 'http://www.raysharp.cn/' failed (error 5).
+//    QDesktopServices::openUrl(QUrl(link));
 //    ui->joinUsURl->setText(tr("<a href =" "www.baidu.com" ">google</a>"));
 //    ui->joinUsURl->setOpenExternalLinks(true);
+
+    //用bat脚本打开
+    QFile openUrlfile(QDir::toNativeSeparators(QCoreApplication::applicationDirPath()) + "\\openUrl.bat");
+    if(!openUrlfile.open(QIODevice::ReadWrite | QIODevice::Truncate))//Truncate清空内容再写
+    {
+        qDebug() << "Open failed.";
+        return;
+    }
+
+    QString openUrlStr;
+    if (MainWindow::instance()->m_connectUsUrl.isEmpty()){
+        openUrlStr = QString("start iexplore %1")
+                .arg(link);
+    }else{
+        openUrlStr = QString("start iexplore %1")
+                .arg(MainWindow::instance()->m_connectUsUrl);
+    }
+
+    QTextStream openUrlIn(&openUrlfile);
+    openUrlIn << openUrlStr;
+    openUrlfile.close();
+
+    QProcess p(NULL);
+    p.start(QCoreApplication::applicationDirPath() + "/openUrl.bat");
+    p.waitForFinished();
+    QFile::remove(QCoreApplication::applicationDirPath() + "/openUrl.bat");
 }
